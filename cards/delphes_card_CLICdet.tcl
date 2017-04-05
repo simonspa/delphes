@@ -129,22 +129,12 @@ module Efficiency MuonTrackingEfficiency {
     set InputArray ParticlePropagator/muons
     set OutputArray muons
 
-    # Current full simulation with 50 GeV muons provides:
-    # Full efficieny up to eta 2.4
-    # Drops to zero at about eta 2.7, 50% at eta 2.6
-    # In barrel only visible with pt > 10 at eta < 1.9
-    #                        with pt >  5 at eta < 2.4
-    set EfficiencyFormula {
-                          (abs(eta) <= 1.9) * (pt <= 10.0) * (0.00) + 
-	                  (abs(eta) <= 1.9) * (pt  > 10.0) * (1.00) + 
-	(abs(eta) > 1.9 && abs(eta) <= 2.4) * (pt <=  5.0) * (0.00) + 
-	(abs(eta) > 1.9 && abs(eta) <= 2.4) * (pt  >  5.0) * (1.00) + 
-	(abs(eta) > 2.4 && abs(eta) <= 2.6) * (pt <=  5.0) * (0.00) + 
-	(abs(eta) > 2.4 && abs(eta) <= 2.6) * (pt  >  5.0) * (0.88) + 
-	(abs(eta) > 2.6 && abs(eta) <= 2.7) * (pt <=  5.0) * (0.00) + 
-	(abs(eta) > 2.6 && abs(eta) <= 2.7) * (pt  >  5.0) * (0.40) + 
-	(abs(eta) > 2.70)                                  * (0.00)
-     }
+    # set EfficiencyFormula {efficiency formula as a function of eta and pt}
+
+    # tracking efficiency formula for muons
+    set EfficiencyFormula {                                                    (pt <= 0.1)   * (0.00) +
+	(abs(eta) <= 2.4)               * (pt > 0.1)    * (0.99) +
+	(abs(eta) >  2.4)                               * (0.00)}
 }
 
 ########################################
