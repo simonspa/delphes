@@ -85,12 +85,18 @@ module Efficiency ChargedHadronTrackingEfficiency {
     set InputArray ParticlePropagator/chargedHadrons
     set OutputArray chargedHadrons
 
-    # add EfficiencyFormula {efficiency formula as a function of eta and pt}
-
-    # tracking efficiency formula for charged hadrons
-    set EfficiencyFormula {                                  (pt <= 0.1)   * (0.00) +
-	(abs(eta) <= 2.4)               * (pt > 0.1)    * (0.99) +
-	(abs(eta) >  2.4)                               * (0.00)}
+    # FIXME currently uses muon tracking efficiency, see below
+    set EfficiencyFormula {
+                          (abs(eta) <= 1.9) * (pt <= 10.0) * (0.00) + 
+	                  (abs(eta) <= 1.9) * (pt  > 10.0) * (1.00) + 
+	(abs(eta) > 1.9 && abs(eta) <= 2.4) * (pt <=  5.0) * (0.00) + 
+	(abs(eta) > 1.9 && abs(eta) <= 2.4) * (pt  >  5.0) * (1.00) + 
+	(abs(eta) > 2.4 && abs(eta) <= 2.6) * (pt <=  5.0) * (0.00) + 
+	(abs(eta) > 2.4 && abs(eta) <= 2.6) * (pt  >  5.0) * (0.88) + 
+	(abs(eta) > 2.6 && abs(eta) <= 2.7) * (pt <=  5.0) * (0.00) + 
+	(abs(eta) > 2.6 && abs(eta) <= 2.7) * (pt  >  5.0) * (0.40) + 
+	(abs(eta) > 2.70)                                  * (0.00)
+     }
 }
 
 ##############################
@@ -101,12 +107,18 @@ module Efficiency ElectronTrackingEfficiency {
     set InputArray ParticlePropagator/electrons
     set OutputArray electrons
 
-    # set EfficiencyFormula {efficiency formula as a function of eta and pt}
-
-    # tracking efficiency formula for electrons
-    set EfficiencyFormula {                                                    (pt <= 0.1)   * (0.00) +
-	(abs(eta) <= 2.4)               * (pt > 0.1)    * (0.99) +
-	(abs(eta) >  2.4)                               * (0.00)}
+    # FIXME currently uses muon tracking efficiency, see below
+    set EfficiencyFormula {
+                          (abs(eta) <= 1.9) * (pt <= 10.0) * (0.00) + 
+	                  (abs(eta) <= 1.9) * (pt  > 10.0) * (1.00) + 
+	(abs(eta) > 1.9 && abs(eta) <= 2.4) * (pt <=  5.0) * (0.00) + 
+	(abs(eta) > 1.9 && abs(eta) <= 2.4) * (pt  >  5.0) * (1.00) + 
+	(abs(eta) > 2.4 && abs(eta) <= 2.6) * (pt <=  5.0) * (0.00) + 
+	(abs(eta) > 2.4 && abs(eta) <= 2.6) * (pt  >  5.0) * (0.88) + 
+	(abs(eta) > 2.6 && abs(eta) <= 2.7) * (pt <=  5.0) * (0.00) + 
+	(abs(eta) > 2.6 && abs(eta) <= 2.7) * (pt  >  5.0) * (0.40) + 
+	(abs(eta) > 2.70)                                  * (0.00)
+     }
 }
 
 ##########################
