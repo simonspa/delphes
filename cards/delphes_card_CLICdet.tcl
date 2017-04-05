@@ -163,12 +163,15 @@ module MomentumSmearing MuonMomentumSmearing {
     set InputArray MuonTrackingEfficiency/muons
     set OutputArray muons
 
-    # set ResolutionFormula {resolution formula as a function of eta and pt}
-
-    # resolution formula for muons
-    set ResolutionFormula {    (abs(eta) <= 1.0)                   * sqrt(0.001^2 + pt^2*1.e-5^2) +
-	(abs(eta) > 1.0 && abs(eta) <= 2.4) * sqrt(0.01^2 + pt^2*1.e-4^2)}
-
+    # Using mid-points between evaluated resolutions from full simulation
+    # Resolution given in dpT/pT.
+    set ResolutionFormula {
+	                   (abs(eta) <= 0.26) * (pt > 0.1) * sqrt(0.0162^2 + pt^2*5.863e-4^2) +
+	(abs(eta) > 0.26 && abs(eta) <= 0.45) * (pt > 0.1) * sqrt(0.0065^2 + pt^2*5.949e-5^2) +
+	(abs(eta) > 0.45 && abs(eta) <= 0.65) * (pt > 0.1) * sqrt(0.0041^2 + pt^2*3.014e-5^2) +
+	(abs(eta) > 0.65 && abs(eta) <= 2.75) * (pt > 0.1) * sqrt(0.0036^2 + pt^2*2.977e-5^2) +
+	(abs(eta) > 2.75)                     * (pt > 0.1) * sqrt(0.0021^2 + pt^2*2.189e-5^2)
+    }
 }
 
 ##############
