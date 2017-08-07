@@ -252,16 +252,14 @@ TH1D* GetEffPt(TClonesArray *branchReco, TClonesArray *branchParticle, TString n
 
       if(eta > etamax || eta < etamin ) continue;
 
-      //cout<<"b parton: "<<pt<<endl;
       if (particle->PID == pdgID && genMomentum.Pt() > ptmin && genMomentum.Pt() < ptmax )
+      //if (TMath::Abs(particle->PID) == pdgID && (particle->Status>20 && particle->Status <30) && genMomentum.Pt() > ptmin && genMomentum.Pt() < ptmax )
       {
         // Loop over all reco object in event
         for(j = 0; j < branchReco->GetEntriesFast(); ++j)
         {
           recoObj = (T*)branchReco->At(j);
           recoMomentum = recoObj->P4();
-          // this is simply to avoid warnings from initial state particle
-          // having infite rapidity ...
         //if(Momentum.Px() == 0 && genMomentum.Py() == 0) continue;
 
 
@@ -316,6 +314,7 @@ TH1D* GetEffPt(TClonesArray *branchReco, TClonesArray *branchParticle, TString n
   return histRecoPt;
 }
 
+
 template<typename T>
 TH1D* GetEffEta(TClonesArray *branchReco, TClonesArray *branchParticle, TString name, int pdgID, double ptmin, double ptmax, double etamin, double etamax, ExRootTreeReader *treeReader)
 {
@@ -362,6 +361,7 @@ TH1D* GetEffEta(TClonesArray *branchReco, TClonesArray *branchParticle, TString 
       if(pt > ptmax || pt < ptmin ) continue;
 
       if (particle->PID == pdgID && genMomentum.Pt() > ptmin && genMomentum.Pt() < ptmax )
+      //if (TMath::Abs(particle->PID) == pdgID && (particle->Status>20 && particle->Status <30) && genMomentum.Pt() > ptmin && genMomentum.Pt() < ptmax )
       {
         // Loop over all reco object in event
         for(j = 0; j < branchReco->GetEntriesFast(); ++j)
@@ -421,6 +421,178 @@ TH1D* GetEffEta(TClonesArray *branchReco, TClonesArray *branchParticle, TString 
 }
 
 
+//------------------------------------------------------------------------------
+
+template<typename T>
+TH1D* GetJetEffPt(TClonesArray *branchJet, TString name, int pdgID, double ptmin, double ptmax, double etamin, double etamax, ExRootTreeReader *treeReader)
+{
+
+  cout << "** Computing Efficiency of reconstructing "<< branchJet->GetName() << " with PID " << pdgID << endl;
+
+  Long64_t allEntries = treeReader->GetEntries();
+
+  T *recoObj;
+
+  TLorentzVector recoMomentum, genMomentum, bestRecoMomentum;
+
+  Float_t pt, eta;
+  Long64_t entry;
+
+  Int_t j;
+
+  TH1D *histGenPt = new TH1D(name+" gen spectra Pt",name+" gen spectra cen", Nbins, TMath::Log10(ptmin), TMath::Log10(ptmax));
+  TH1D *histRecoPt = new TH1D(name+" reco spectra Pt",name+" reco spectra cen", Nbins, TMath::Log10(ptmin), TMath::Log10(ptmax));
+
+  histGenPt->SetDirectory(0);
+  histRecoPt->SetDirectory(0);
+
+  BinLogX(histGenPt);
+  BinLogX(histRecoPt);
+
+  // Loop over all events
+  for(entry = 0; entry < allEntries; ++entry)
+  {
+    // Load selected branches with data from specified event
+    treeReader->ReadEntry(entry);
+
+    // Loop over all reco object in event
+    for(j = 0; j < branchJet->GetEntriesFast(); ++j)
+    {
+      recoObj = (T*)branchJet->At(j);
+      recoMomentum = recoObj->P4();
+      pt =   recoMomentum.Pt();      
+      eta = TMath::Abs(recoMomentum.Eta());
+      Jet *jet = (Jet *)recoObj;
+          
+      if(eta > etamax || eta < etamin ) continue;
+      if(pt < ptmin || pt > ptmax) continue;
+      
+      Int_t flavor = jet->Flavor;
+      if(flavor == 21) flavor = 0;
+    
+      if(TMath::Abs(pdgID) == 1)
+      {
+        
+        if(flavor < 4)
+        {
+          histGenPt->Fill(pt);
+          if( jet->BTag & (1 << 0) ) histRecoPt->Fill(pt);
+        }
+      }
+      if(TMath::Abs(pdgID) == 4)
+      {
+        if(flavor == 4)
+        {
+          histGenPt->Fill(pt);
+          if( jet->BTag & (1 << 0) ) histRecoPt->Fill(pt);
+        }
+      }
+      if(TMath::Abs(pdgID) == 5)
+      {
+        if(flavor == 5)
+        {
+          histGenPt->Fill(pt);
+          if( jet->BTag & (1 << 0) ) histRecoPt->Fill(pt);
+        }
+      }
+   }
+
+  }
+
+  histRecoPt->Sumw2();
+  histGenPt->Sumw2();
+
+  histRecoPt->Divide(histGenPt);
+  histRecoPt->Scale(100.);
+
+  return histRecoPt;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+TH1D* GetJetEffEta(TClonesArray *branchJet, TString name, int pdgID, double ptmin, double ptmax, double etamin, double etamax, ExRootTreeReader *treeReader)
+{
+
+  cout << "** Computing Efficiency of reconstructing "<< branchJet->GetName() << " with PID " << pdgID << endl;
+
+  Long64_t allEntries = treeReader->GetEntries();
+
+  T *recoObj;
+
+  TLorentzVector recoMomentum, genMomentum, bestRecoMomentum;
+
+  Float_t pt, eta;
+  Long64_t entry;
+
+  Int_t j;
+
+  TH1D *histGenEta = new TH1D(name+" gen spectra Eta",name+" gen spectra", Nbins, etamin, etamax);
+  TH1D *histRecoEta = new TH1D(name+" reco spectra Eta",name+" reco spectra", Nbins, etamin, etamax);
+
+  histGenEta->SetDirectory(0);
+  histRecoEta->SetDirectory(0);
+  // Loop over all events
+  for(entry = 0; entry < allEntries; ++entry)
+  {
+    // Load selected branches with data from specified event
+    treeReader->ReadEntry(entry);
+
+    // Loop over all reco object in event
+    for(j = 0; j < branchJet->GetEntriesFast(); ++j)
+    {
+      recoObj = (T*)branchJet->At(j);
+      recoMomentum = recoObj->P4();
+      pt =   recoMomentum.Pt();      
+      eta = recoMomentum.Eta();
+      Jet *jet = (Jet *)recoObj;
+          
+      if(eta > etamax || eta < etamin ) continue;
+      if(pt < ptmin || pt > ptmax) continue;
+      
+      Int_t flavor = jet->Flavor;
+      if(flavor == 21) flavor = 0;
+         
+      if(TMath::Abs(pdgID) == 1)
+      {
+        if(flavor  == 1 || flavor == 21)
+        {
+          histGenEta->Fill(eta);
+          if( jet->BTag & (1 << 0) ) histRecoEta->Fill(eta);
+        }
+      }
+      if(TMath::Abs(pdgID) == 4)
+      {
+        if(flavor == 4)
+        {
+          histGenEta->Fill(eta);
+          if( jet->BTag & (1 << 0) ) histRecoEta->Fill(eta);
+        }
+      }
+      if(TMath::Abs(pdgID) == 5)
+      {
+        if(flavor == 5)
+        {
+          histGenEta->Fill(eta);
+          if( jet->BTag & (1 << 0) ) histRecoEta->Fill(eta);
+        }
+      }
+   }
+
+  }
+
+
+  histRecoEta->Sumw2();
+  histGenEta->Sumw2();
+
+  histRecoEta->Divide(histGenEta);
+  histRecoEta->Scale(100.);
+
+  return histRecoEta;
+}
+
+
+// -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
 TH1D* GetTauEffPt(TClonesArray *branchReco, TClonesArray *branchParticle, TString name, int pdgID, double ptmin, double ptmax, double etamin, double etamax, ExRootTreeReader *treeReader)
@@ -1278,17 +1450,18 @@ void DrawAxis(TMultiGraph *mg, TLegend *leg, double xmin, double xmax, double ym
 }
 
 
-void Validation(const char *inputFilePion,
-                const char *inputFileElectron,
-                const char *inputFileMuon,
-                const char *inputFilePhoton,
-                const char *inputFileNeutralHadron,
-                const char *inputFileJet,
-                const char *inputFileBJet,
-                const char *inputFileCJet,
-                const char *inputFileTauJet,
-                const char *outputFile,
-                const char *version)
+void DelphesValidation(
+  const char *inputFilePion,
+  const char *inputFileElectron,
+  const char *inputFileMuon,
+  const char *inputFilePhoton,
+  const char *inputFileNeutralHadron,
+  const char *inputFileJet,
+  const char *inputFileBJet,
+  const char *inputFileCJet,
+  const char *inputFileTauJet,
+  const char *outputFile,
+  const char *version)
 {
 
   TChain *chainPion = new TChain("Delphes");
@@ -2262,7 +2435,7 @@ void Validation(const char *inputFilePion,
     TCanvas *c_met_res_ht = new TCanvas("","", 800, 600);
 
     mg_met_res_ht->Draw("APE");
-    DrawAxis(mg_met_res_ht, leg_met_res_ht, 10, 10000, 0.1, 1000, " #sum p_{T} [GeV]", "resolution in E_{x,y}^{miss} [GeV]", true, true);
+    DrawAxis(mg_met_res_ht, leg_met_res_ht, 1000, 100000, 0.1, 1000, " #sum p_{T} [GeV]", "resolution in E_{x,y}^{miss} [GeV]", true, true);
 
     leg_met_res_ht->Draw();
     pave->Draw();
@@ -2467,8 +2640,7 @@ void Validation(const char *inputFilePion,
     c_recpho_eff_eta->Print(pdfOutput,"pdf");
     c_recpho_eff_eta->Print(figPath+"img_recpho_eff_eta.pdf","pdf");
     c_recpho_eff_eta->Print(figPath+"img_recpho_eff_eta.png","png");
-
-
+    
     /////////////////////////////////////////
     // B-jets  Efficiency/ mistag rates   ///
     /////////////////////////////////////////
@@ -2487,7 +2659,8 @@ void Validation(const char *inputFilePion,
     for (k = 0; k < etaVals.size()-1; k++)
     {
 
-       h_recbjet_eff_pt = GetEffPt<Jet>(branchPFBJet, branchParticleBJet, "BJet", 5, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderBJet);
+       h_recbjet_eff_pt = GetJetEffPt<Jet>(branchPFBJet, "BJet", 5, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderBJet);
+       //h_recbjet_eff_pt = GetEffPt<Jet>(branchPFBJet, branchParticleBJet, "BJet", 5, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderBJet);
        gr_recbjet_eff_pt[k] = TGraphErrors(h_recbjet_eff_pt);
 
        s_etaMin = Form("%.1f",etaVals.at(k));
@@ -2503,7 +2676,8 @@ void Validation(const char *inputFilePion,
     // loop over pt
     for (k = 0; k < ptVals.size(); k++)
     {
-       h_recbjet_eff_eta = GetEffEta<Jet>(branchPFBJet, branchParticleBJet, "BJet", 5, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderBJet);
+       h_recbjet_eff_eta = GetJetEffEta<Jet>(branchPFBJet, "BJet", 5, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderBJet);
+       //h_recbjet_eff_eta = GetEffEta<Jet>(branchPFBJet, branchParticleBJet, "BJet", 5, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderBJet);
        gr_recbjet_eff_eta[k] = TGraphErrors(h_recbjet_eff_eta);
 
        s_pt = Form("b-jet , p_{T} = %.0f GeV",ptVals.at(k));
@@ -2550,7 +2724,8 @@ void Validation(const char *inputFilePion,
     for (k = 0; k < etaVals.size()-1; k++)
     {
 
-       h_recbjet_cmis_pt = GetEffPt<Jet>(branchPFCJet, branchParticleCJet, "CJet", 4, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderCJet);
+       h_recbjet_cmis_pt = GetJetEffPt<Jet>(branchPFCJet, "CJet", 4, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderCJet);
+       //h_recbjet_cmis_pt = GetEffPt<Jet>(branchPFCJet, branchParticleCJet, "CJet", 4, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderCJet);
        gr_recbjet_cmis_pt[k] = TGraphErrors(h_recbjet_cmis_pt);
 
        s_etaMin = Form("%.1f",etaVals.at(k));
@@ -2566,7 +2741,8 @@ void Validation(const char *inputFilePion,
     // loop over pt
     for (k = 0; k < ptVals.size(); k++)
     {
-       h_recbjet_cmis_eta = GetEffEta<Jet>(branchPFCJet, branchParticleCJet, "CJet", 4, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderCJet);
+       h_recbjet_cmis_eta = GetJetEffEta<Jet>(branchPFCJet, "CJet", 4, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderCJet);
+       //h_recbjet_cmis_eta = GetEffEta<Jet>(branchPFCJet, branchParticleCJet, "CJet", 4, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderCJet);
        gr_recbjet_cmis_eta[k] = TGraphErrors(h_recbjet_cmis_eta);
 
        s_pt = Form("c-jet , p_{T} = %.0f GeV",ptVals.at(k));
@@ -2613,7 +2789,8 @@ void Validation(const char *inputFilePion,
     for (k = 0; k < etaVals.size()-1; k++)
     {
 
-       h_recbjet_lmis_pt = GetEffPt<Jet>(branchJet, branchParticleJet, "Jet", 1, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderJet);
+       h_recbjet_lmis_pt = GetJetEffPt<Jet>(branchJet, "Jet", 1, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderJet);
+       //h_recbjet_lmis_pt = GetEffPt<Jet>(branchJet, branchParticleJet, "Jet", 1, ptMin, ptMax, etaVals.at(k), etaVals.at(k+1), treeReaderJet);
        gr_recbjet_lmis_pt[k] = TGraphErrors(h_recbjet_lmis_pt);
 
        s_etaMin = Form("%.1f",etaVals.at(k));
@@ -2629,7 +2806,8 @@ void Validation(const char *inputFilePion,
     // loop over pt
     for (k = 0; k < ptVals.size(); k++)
     {
-       h_recbjet_lmis_eta = GetEffEta<Jet>(branchJet, branchParticleJet, "Jet", 1, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderJet);
+       h_recbjet_lmis_eta = GetJetEffEta<Jet>(branchJet, "Jet", 1, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderJet);
+       //h_recbjet_lmis_eta = GetEffEta<Jet>(branchJet, branchParticleJet, "Jet", 1, 0.5*ptVals.at(k), 2.0*ptVals.at(k) ,etaMin, etaMax , treeReaderJet);
        gr_recbjet_lmis_eta[k] = TGraphErrors(h_recbjet_lmis_eta);
 
        s_pt = Form("uds-jet , p_{T} = %.0f GeV",ptVals.at(k));
@@ -2641,7 +2819,9 @@ void Validation(const char *inputFilePion,
     TCanvas *c_recbjet_lmis_pt = new TCanvas("","", 800, 600);
 
     mg_recbjet_lmis_pt->Draw("APE");
-    DrawAxis(mg_recbjet_lmis_pt, leg_recbjet_lmis_pt, ptMin, ptMax, 0.0, 0.5, "p_{T} [GeV]", "light - mistag rate (%)", true, false);
+    
+    DrawAxis(mg_recbjet_lmis_pt, leg_recbjet_lmis_pt, ptMin, ptMax, 0.0, 1.0, "p_{T} [GeV]", "light - mistag rate (%)", true, false);
+    
     leg_recbjet_lmis_pt->Draw();
     pave->Draw();
 
@@ -2652,7 +2832,7 @@ void Validation(const char *inputFilePion,
     TCanvas *c_recbjet_lmis_eta = new TCanvas("","", 800, 600);
 
     mg_recbjet_lmis_eta->Draw("APE");
-    DrawAxis(mg_recbjet_lmis_eta, leg_recbjet_lmis_eta, etaMin, etaMax, 0.0, 0.5, " #eta ", "light - mistag rate (%)", false, false);
+    DrawAxis(mg_recbjet_lmis_eta, leg_recbjet_lmis_eta, etaMin, etaMax, 0.0, 1.0, " #eta ", "light - mistag rate (%)", false, false);
     leg_recbjet_lmis_eta->Draw();
     pave->Draw();
 
@@ -2836,8 +3016,6 @@ void Validation(const char *inputFilePion,
   fout->Write();
 
 
-
-
   cout << "** Exiting..." << endl;
 
   delete treeReaderElectron;
@@ -2858,13 +3036,13 @@ void Validation(const char *inputFilePion,
 
 int main(int argc, char *argv[])
 {
-  char *appName = "Validation";
+  char *appName = "DelphesValidation";
 
   if(argc != 12)
   {
-    cout << " Usage: " << appName << " input_file_electron input_file_muon input_file_photon input_file_jet input_file_bjet input_file_taujet output_file" << endl;
-    cout << " input_file_pion  - input file in ROOT format ('Delphes' tree)," << endl;
-    cout << " input_file_electron  - input file in ROOT format ('Delphes' tree)," << endl;
+    cout << " Usage: " << appName << " input_file_electron input_file_muon input_file_photon input_file_jet input_file_bjet input_file_taujet output_file version" << endl;
+    cout << " input_file_pion - input file in ROOT format ('Delphes' tree)," << endl;
+    cout << " input_file_electron - input file in ROOT format ('Delphes' tree)," << endl;
     cout << " input_file_muon - input file in ROOT format ('Delphes' tree)," << endl;
     cout << " input_file_photon - input file in ROOT format ('Delphes' tree)," << endl;
     cout << " input_file_neutralhadron - input file in ROOT format ('Delphes' tree)," << endl;
@@ -2872,8 +3050,8 @@ int main(int argc, char *argv[])
     cout << " input_file_bjet - input file in ROOT format ('Delphes' tree)," << endl;
     cout << " input_file_cjet - input file in ROOT format ('Delphes' tree)," << endl;
     cout << " input_file_taujet - input file in ROOT format ('Delphes' tree)," << endl;
-    cout << " output_file - output file in ROOT format" << endl;
-    cout << " delphes version" << endl;
+    cout << " output_file - output file in ROOT format," << endl;
+    cout << " version - Delphes version" << endl;
 
     return 1;
   }
@@ -2884,7 +3062,7 @@ int main(int argc, char *argv[])
   char *appargv[] = {appName};
   TApplication app(appName, &appargc, appargv);
 
-  Validation(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9], argv[10], argv[11]);
+  DelphesValidation(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9], argv[10], argv[11]);
 }
 
 

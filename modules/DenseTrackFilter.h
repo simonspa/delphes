@@ -16,32 +16,33 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ParticlePropagator_h
-#define ParticlePropagator_h
+#ifndef DenseTrackFilter_h
+#define DenseTrackFilter_h
 
-/** \class ParticlePropagator
+/** \class DenseTrackFilter
  *
- *  Propagates charged and neutral particles
- *  from a given vertex to a cylinder defined by its radius, 
- *  its half-length, centered at (0,0,0) and with its axis
- *  oriented along the z-axis.
+ *  Applies reconstruction inefficiency on tracks in dense environment
  *
- *  \author P. Demin - UCL, Louvain-la-Neuve
+ *  \author M. Selvaggi - CERN
  *
  */
 
 #include "classes/DelphesModule.h"
 
-class TClonesArray;
-class TIterator;
-class TLorentzVector;
+#include <map>
+#include <set>
+#include <vector>
 
-class ParticlePropagator: public DelphesModule
+class TObjArray;
+class DelphesFormula;
+class Candidate;
+
+class DenseTrackFilter: public DelphesModule
 {
 public:
 
-  ParticlePropagator();
-  ~ParticlePropagator();
+  DenseTrackFilter();
+  ~DenseTrackFilter();
 
   void Init();
   void Process();
@@ -49,21 +50,26 @@ public:
 
 private:
 
-  Double_t fRadius, fRadius2, fRadiusMax, fHalfLength, fHalfLengthMax;
-  Double_t fBz;
+  typedef std::map< Double_t, std::set< Double_t > > TBinMap; //!
 
-  TIterator *fItInputArray; //!
+  Candidate *fTower;
 
-  const TObjArray *fInputArray; //!
-  const TObjArray *fBeamSpotInputArray; //!
+  Double_t fEtaPhiRes;
 
-  TObjArray *fOutputArray; //!
-  TObjArray *fNeutralOutputArray; //!
-  TObjArray *fChargedHadronOutputArray; //!
-  TObjArray *fElectronOutputArray; //!
-  TObjArray *fMuonOutputArray; //!
+  TBinMap fBinMap; //!
 
-  ClassDef(ParticlePropagator, 1)
+  std::vector < Double_t > fEtaBins;
+  std::vector < std::vector < Double_t >* > fPhiBins;
+
+  std::vector < Long64_t > fTowerHits;
+
+  TIterator *fItTrackInputArray; //!
+
+  const TObjArray *fTrackInputArray; //!
+
+  TObjArray *fTrackOutputArray; //!
+
+  ClassDef(DenseTrackFilter, 1)
 };
 
 #endif

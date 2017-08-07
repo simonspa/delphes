@@ -150,11 +150,11 @@ tmp/examples/Example1.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootTreeBranch.h \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootUtilities.h
-Validation$(ExeSuf): \
-	tmp/examples/Validation.$(ObjSuf)
+DelphesValidation$(ExeSuf): \
+	tmp/validation/DelphesValidation.$(ObjSuf)
 
-tmp/examples/Validation.$(ObjSuf): \
-	examples/Validation.cpp \
+tmp/validation/DelphesValidation.$(ObjSuf): \
+	validation/DelphesValidation.cpp \
 	classes/DelphesClasses.h \
 	external/ExRootAnalysis/ExRootTreeReader.h \
 	external/ExRootAnalysis/ExRootTreeWriter.h \
@@ -170,7 +170,7 @@ EXECUTABLE +=  \
 	stdhep2pileup$(ExeSuf) \
 	CaloGrid$(ExeSuf) \
 	Example1$(ExeSuf) \
-	Validation$(ExeSuf)
+	DelphesValidation$(ExeSuf)
 
 EXECUTABLE_OBJ +=  \
 	tmp/converters/hepmc2pileup.$(ObjSuf) \
@@ -181,7 +181,7 @@ EXECUTABLE_OBJ +=  \
 	tmp/converters/stdhep2pileup.$(ObjSuf) \
 	tmp/examples/CaloGrid.$(ObjSuf) \
 	tmp/examples/Example1.$(ObjSuf) \
-	tmp/examples/Validation.$(ObjSuf)
+	tmp/validation/DelphesValidation.$(ObjSuf)
 
 DelphesHepMC$(ExeSuf): \
 	tmp/readers/DelphesHepMC.$(ObjSuf)
@@ -360,6 +360,7 @@ tmp/modules/ModulesDict.$(SrcSuf): \
 	modules/ImpactParameterSmearing.h \
 	modules/TimeSmearing.h \
 	modules/SimpleCalorimeter.h \
+	modules/DenseTrackFilter.h \
 	modules/Calorimeter.h \
 	modules/OldCalorimeter.h \
 	modules/Isolation.h \
@@ -643,6 +644,15 @@ tmp/modules/Delphes.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootClassifier.h \
 	external/ExRootAnalysis/ExRootConfReader.h \
 	external/ExRootAnalysis/ExRootTreeWriter.h
+tmp/modules/DenseTrackFilter.$(ObjSuf): \
+	modules/DenseTrackFilter.$(SrcSuf) \
+	modules/DenseTrackFilter.h \
+	classes/DelphesClasses.h \
+	classes/DelphesFactory.h \
+	classes/DelphesFormula.h \
+	external/ExRootAnalysis/ExRootResult.h \
+	external/ExRootAnalysis/ExRootFilter.h \
+	external/ExRootAnalysis/ExRootClassifier.h
 tmp/modules/Efficiency.$(ObjSuf): \
 	modules/Efficiency.$(SrcSuf) \
 	modules/Efficiency.h \
@@ -1036,6 +1046,7 @@ DELPHES_OBJ +=  \
 	tmp/modules/Cloner.$(ObjSuf) \
 	tmp/modules/ConstituentFilter.$(ObjSuf) \
 	tmp/modules/Delphes.$(ObjSuf) \
+	tmp/modules/DenseTrackFilter.$(ObjSuf) \
 	tmp/modules/Efficiency.$(ObjSuf) \
 	tmp/modules/EnergyScale.$(ObjSuf) \
 	tmp/modules/EnergySmearing.$(ObjSuf) \
@@ -1677,6 +1688,10 @@ TCL_OBJ +=  \
 	tmp/external/tcl/tclUtil.$(ObjSuf) \
 	tmp/external/tcl/tclVar.$(ObjSuf)
 
+modules/DenseTrackFilter.h: \
+	classes/DelphesModule.h
+	@touch $@
+
 modules/VertexFinderDA4D.h: \
 	classes/DelphesModule.h
 	@touch $@
@@ -2245,7 +2260,7 @@ distclean: clean
 dist:
 	@echo ">> Building $(DISTTAR)"
 	@mkdir -p $(DISTDIR)
-	@cp -a CHANGELOG CMakeLists.txt COPYING CREDITS DelphesEnv.sh README README_4LHCb VERSION Makefile MinBias.pileup configure cards classes converters display doc examples external modules python readers $(DISTDIR)
+	@cp -a CHANGELOG CMakeLists.txt COPYING CREDITS DelphesEnv.sh README README_4LHCb VERSION Makefile MinBias.pileup configure cards classes converters display doc examples external modules python readers validation $(DISTDIR)
 	@find $(DISTDIR) -depth -name .\* -exec rm -rf {} \;
 	@tar -czf $(DISTTAR) $(DISTDIR)
 	@rm -rf $(DISTDIR)
